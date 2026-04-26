@@ -17,17 +17,43 @@ class _SignupscreenState extends State<Signupscreen> {
   TextEditingController passwordController = TextEditingController();
 
   // SIGNUP FUNCTION
-  signUp() async {
-    await FirebaseAuth.instance.createUserWithEmailAndPassword(
-      email: emailController.text.trim(),
-      password: passwordController.text.trim(),
-    );
-
-    // verification mail send
-    await FirebaseAuth.instance.currentUser!.sendEmailVerification();
-
+  Future<void> signUp() async {
+    try {
+      // Create new user
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
 
 
+      // Send verification email
+      await FirebaseAuth.instance.currentUser!
+          .sendEmailVerification();
+
+      // Success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Signup Successful! Verification Email Sent"),
+        ),
+      );
+
+      // Navigate to Verify Screen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const Verifyscreen(),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      // Error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.message ?? "Signup Failed",
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -48,6 +74,7 @@ class _SignupscreenState extends State<Signupscreen> {
 
             const SizedBox(height: 20),
 
+            // Email Field
             Uihelper.CustomTextField(
               controller: emailController,
               text: "Email",
@@ -57,6 +84,7 @@ class _SignupscreenState extends State<Signupscreen> {
 
             const SizedBox(height: 10),
 
+            // Password Field
             Uihelper.CustomTextField(
               controller: passwordController,
               text: "Password",
@@ -66,10 +94,13 @@ class _SignupscreenState extends State<Signupscreen> {
 
             const SizedBox(height: 20),
 
-            ElevatedButton(onPressed: (){
-
-              Navigator.pushReplacement(context, MaterialPageRoute(builder:(context) => Verifyscreen(),));
-            }, child: Text("clicked here"))
+            // Signup Button
+            ElevatedButton(
+              onPressed: () async {
+                await signUp();
+              },
+              child: const Text("Signup"),
+            ),
           ],
         ),
       ),
